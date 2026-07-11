@@ -1,339 +1,435 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>လစဉ်ကြေးမှတ်တမ်း (Sheets Sync)</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<style>
-  * { box-sizing: border-box; font-family: 'Padauk', 'Myanmar Text', sans-serif; }
-  body { margin:0; background:#f2f4f7; color:#222; }
-  header { background:#0d6efd; color:#fff; padding:14px 16px; text-align:center; font-size:18px; font-weight:bold; position:sticky; top:0; z-index:10; }
-  .container { padding:12px; max-width:480px; margin:0 auto; }
-  .tabs { display:flex; background:#fff; border-radius:10px; overflow:hidden; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,.1); }
-  .tab { flex:1; text-align:center; padding:10px 4px; cursor:pointer; font-size:13px; }
-  .tab.active { background:#0d6efd; color:#fff; font-weight:bold; }
-  .card { background:#fff; border-radius:10px; padding:14px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
-  h3 { margin:0 0 10px; font-size:15px; color:#0d6efd; }
-  label { font-size:13px; display:block; margin-top:8px; margin-bottom:2px; color:#555; }
-  input, select { width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
-  button { border:none; border-radius:6px; padding:10px 14px; font-size:14px; cursor:pointer; margin-top:10px; }
-  .btn-primary { background:#0d6efd; color:#fff; width:100%; }
-  .btn-outline { background:#fff; border:1px solid #0d6efd; color:#0d6efd; }
-  .row-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee; font-size:13px; }
-  .row-item:last-child { border-bottom:none; }
-  .paid { color:#198754; font-weight:bold; }
-  .unpaid { color:#dc3545; font-weight:bold; }
-  .summary-box { display:flex; justify-content:space-between; margin-top:10px; font-size:13px; }
-  .summary-box div { text-align:center; flex:1; }
-  .summary-box .val { font-size:16px; font-weight:bold; }
-  .green { color:#198754; } .red { color:#dc3545; } .blue { color:#0d6efd; }
-  .actions { display:flex; gap:8px; margin-top:14px; }
-  .actions button { flex:1; }
-  small { color:#888; }
-  .del-x { color:#dc3545; cursor:pointer; font-size:16px; padding:0 6px; }
-  #printArea { display:none; }
-  #syncStatus { font-size:11px; text-align:center; padding:4px; color:#fff; }
-  .status-ok { background:#198754; }
-  .status-err { background:#dc3545; }
-  .status-sync { background:#ffc107; color:#333; }
-  @media print {
-    header, .tabs, .no-print, #syncStatus { display:none !important; }
-    #printArea { display:block !important; }
-    body { background:#fff; }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>လစဉ်ကြေးမှတ်တမ်း</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Padauk', 'Myanmar Text', sans-serif; }
+    body { margin: 0; background: #f2f4f7; color: #222; }
+    header { background: #0d6efd; color: #fff; padding: 14px 16px; text-align: center; font-size: 18px; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+    .container { padding: 12px; max-width: 520px; margin: 0 auto; }
+    .tabs { display: flex; overflow-x: auto; background: #fff; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    .tab { flex: 1; text-align: center; padding: 10px 6px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+    .tab.active { background: #0d6efd; color: #fff; font-weight: bold; }
+    .card { background: #fff; border-radius: 10px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    h3 { margin: 0 0 10px; font-size: 15px; color: #0d6efd; }
+    label { display: block; font-size: 13px; margin-top: 8px; margin-bottom: 4px; color: #555; }
+    input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+    button { border: none; border-radius: 6px; padding: 10px 14px; font-size: 14px; cursor: pointer; margin-top: 10px; }
+    .btn-primary { background: #0d6efd; color: #fff; width: 100%; }
+    .btn-outline { background: #fff; color: #0d6efd; border: 1px solid #0d6efd; width: 100%; }
+    .member-card { border-bottom: 1px solid #eee; padding: 8px 0; font-size: 13px; }
+    .member-card .name { font-weight: bold; font-size: 14px; }
+    .member-card .detail { color: #666; font-size: 12px; margin-top: 2px; }
+    .row-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+    .row-item:last-child, .member-card:last-child { border-bottom: none; }
+    .paid { color: #198754; font-weight: bold; }
+    .unpaid { color: #dc3545; font-weight: bold; }
+    .overdue { color: #dc3545; font-weight: bold; background: #fdecea; padding: 2px 6px; border-radius: 4px; }
+    .summary-box { display: flex; justify-content: space-between; margin-top: 10px; font-size: 13px; }
+    .summary-box div { text-align: center; flex: 1; }
+    .summary-box .val { font-size: 16px; font-weight: bold; }
+    .green { color: #198754; } .red { color: #dc3545; } .blue { color: #0d6efd; }
+    .actions { display: flex; gap: 8px; margin-top: 14px; }
+    .actions button { flex: 1; }
+    .del-x { color: #dc3545; cursor: pointer; font-size: 16px; padding: 0 6px; }
+    #syncStatus { font-size: 11px; text-align: center; padding: 4px; color: #fff; }
+    .status-ok { background: #198754; }
+    .status-err { background: #dc3545; }
+    .status-sync { background: #ffc107; color: #333; }
+    .reminder-banner { background: #dc3545; color: #fff; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
+    #printArea { display: none; }
+    @media print {
+      header, .tabs, .no-print, #syncStatus { display: none !important; }
+      #printArea { display: block !important; }
+      body { background: #fff; }
+    }
+  </style>
 </head>
 <body>
-<header>📒 လစဉ်ကြေးမှတ်တမ်း</header>
-<div id="syncStatus" class="no-print"></div>
-<div class="container">
-  <div class="tabs no-print">
-    <div class="tab active" data-tab="settings">API</div>
-    <div class="tab" data-tab="members">အဖွဲ့ဝင်များ</div>
-    <div class="tab" data-tab="dues">ကြေးထည့်</div>
-    <div class="tab" data-tab="expense">အသုံးစရိတ်</div>
-    <div class="tab" data-tab="report">အစီရင်ခံစာ</div>
-  </div>
+  <header>📒 လစဉ်ကြေးမှတ်တမ်း</header>
+  <div id="syncStatus" class="no-print"></div>
+  <div class="container">
+    <div id="reminderArea"></div>
 
-  <div class="tab-content" id="tab-settings">
-    <div class="card">
-      <h3>Google Sheets API ချိတ်ဆက်ရန်</h3>
-      <label>Apps Script Web App URL</label>
-      <input id="apiUrl" placeholder="https://script.google.com/macros/s/xxx/exec">
-      <button class="btn-primary" onclick="saveApiUrl()">💾 သိမ်းမည်</button>
-      <button class="btn-outline" onclick="pullFromSheet()" style="width:100%">⬇️ Sheet မှ ဒေတာယူမည် (Pull)</button>
-      <button class="btn-outline" onclick="pushToSheet()" style="width:100%">⬆️ Sheet ကို ပို့မည် (Push)</button>
-      <p><small>Apps Script code ကို Google Sheet Extensions > Apps Script တွင် ထည့်ပြီး Web App အနေနှင့် Deploy လုပ်ပါ။ URL ကို ဒီနေရာတွင် ထည့်ပါ။</small></p>
+    <div class="tabs no-print">
+      <div class="tab active" data-tab="settings">API</div>
+      <div class="tab" data-tab="members">အဖွဲ့ဝင်</div>
+      <div class="tab" data-tab="dues">ကြေးထည့်</div>
+      <div class="tab" data-tab="expense">အသုံးစရိတ်</div>
+      <div class="tab" data-tab="report">အစီရင်ခံစာ</div>
     </div>
-  </div>
 
-  <div class="tab-content" id="tab-members" style="display:none">
-    <div class="card">
-      <h3>အဖွဲ့ဝင်အသစ်ထည့်ရန်</h3>
-      <label>အမည်</label>
-      <input id="memberName" placeholder="အမည်ထည့်ပါ">
-      <button class="btn-primary" onclick="addMember()">➕ ထည့်မည်</button>
+    <div class="tab-content" id="tab-settings">
+      <div class="card">
+        <h3>Google Sheets API ချိတ်ဆက်ရန်</h3>
+        <label>Apps Script Web App URL</label>
+        <input id="apiUrl" placeholder="https://script.google.com/macros/s/xxx/exec">
+        <button class="btn-primary" onclick="saveApiUrl()">💾 သိမ်းမည်</button>
+        <button class="btn-outline" onclick="pullFromSheet()">⬇️ Sheet မှ ဒေတာယူမည် (Pull)</button>
+        <button class="btn-outline" onclick="pushToSheet()">⬆️ Sheet ကို ပို့မည် (Push)</button>
+      </div>
     </div>
-    <div class="card">
-      <h3>အဖွဲ့ဝင်စာရင်း (<span id="memberCount">0</span>)</h3>
-      <div id="memberList"></div>
-    </div>
-  </div>
 
-  <div class="tab-content" id="tab-dues" style="display:none">
-    <div class="card">
-      <h3>လစဉ်ကြေး မှတ်တမ်းယူရန်</h3>
-      <label>လ/နှစ် ရွေးပါ</label>
-      <input type="month" id="duesMonth">
-      <label>ငွေပမာဏ (တစ်ဦးစီအတွက် standard)</label>
-      <input type="number" id="duesAmount" placeholder="ဥပမာ 1000">
-      <button class="btn-primary" onclick="loadDuesMonth()">ဖွင့်ကြည့်မည်</button>
+    <div class="tab-content" id="tab-members" style="display:none">
+      <div class="card">
+        <h3>အဖွဲ့ဝင်အသစ်ထည့်ရန်</h3>
+        <label>အမည်</label>
+        <input id="memberName" placeholder="အမည်ထည့်ပါ">
+        <label>ရာထူး</label>
+        <input id="memberPosition" placeholder="ဥပမာ - ဥက္ကဋ္ဌ">
+        <label>တာဝန်</label>
+        <input id="memberDuty" placeholder="ဥပမာ - ငွေကိုင်">
+        <label>နေရပ်</label>
+        <input id="memberAddress" placeholder="ဥပမာ - တောင်ကြီး">
+        <button class="btn-primary" onclick="addMember()">➕ ထည့်မည်</button>
+      </div>
+      <div class="card">
+        <h3>အဖွဲ့ဝင်စာရင်း (<span id="memberCount">0</span>)</h3>
+        <div id="memberList"></div>
+      </div>
     </div>
-    <div class="card" id="duesCard" style="display:none">
-      <h3 id="duesTitle"></h3>
-      <div id="duesList"></div>
-      <div class="summary-box">
-        <div>ပေးသွင်းပြီး<div class="val green" id="paidCount">0</div></div>
-        <div>ကျန်ရှိ<div class="val red" id="unpaidCount">0</div></div>
-        <div>ရငွေစုစုပေါင်း<div class="val blue" id="collectedTotal">0</div></div>
+
+    <div class="tab-content" id="tab-dues" style="display:none">
+      <div class="card">
+        <h3>လစဉ်ကြေး မှတ်တမ်းယူရန်</h3>
+        <label>လ/နှစ် ရွေးပါ</label>
+        <input type="month" id="duesMonth">
+        <label>ငွေပမာဏ</label>
+        <input type="number" id="duesAmount" placeholder="ဥပမာ 1000">
+        <label>ထည့်ရမည့် နောက်ဆုံးရက်</label>
+        <input type="date" id="duesDueDate">
+        <button class="btn-primary" onclick="loadDuesMonth()">ဖွင့်ကြည့်မည်</button>
+      </div>
+      <div class="card" id="duesCard" style="display:none">
+        <h3 id="duesTitle"></h3>
+        <div id="duesList"></div>
+        <div class="summary-box">
+          <div>ပေးသွင်းပြီး<div class="val green" id="paidCount">0</div></div>
+          <div>ကျန်ရှိ<div class="val red" id="unpaidCount">0</div></div>
+          <div>ရငွေစုစုပေါင်း<div class="val blue" id="collectedTotal">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-expense" style="display:none">
+      <div class="card">
+        <h3>အသုံးစရိတ်အသစ်ထည့်ရန်</h3>
+        <label>ခေါင်းစဉ်</label>
+        <input id="expTitle" placeholder="ခေါင်းစဉ်">
+        <label>ပမာဏ</label>
+        <input type="number" id="expAmount" placeholder="ငွေပမာဏ">
+        <label>ရက်စွဲ</label>
+        <input type="date" id="expDate">
+        <button class="btn-primary" onclick="addExpense()">➕ ထည့်မည်</button>
+      </div>
+      <div class="card">
+        <h3>အသုံးစရိတ်စာရင်း</h3>
+        <div id="expenseList"></div>
+        <div class="summary-box">
+          <div>စုစုပေါင်းသုံးငွေ<div class="val red" id="totalExpense">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-report" style="display:none">
+      <div class="card">
+        <h3>အနှစ်ချုပ် / လက်ကျန်ငွေ</h3>
+        <div id="reportBody"></div>
+        <div class="actions no-print">
+          <button class="btn-outline" onclick="window.print()">🖨️ Print</button>
+          <button class="btn-outline" onclick="exportJPG()">🖼️ JPG Export</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="tab-content" id="tab-expense" style="display:none">
-    <div class="card">
-      <h3>အသုံးစရိတ်အသစ်ထည့်ရန်</h3>
-      <label>ခေါင်းစဉ်</label>
-      <input id="expTitle" placeholder="ခေါင်းစဉ်">
-      <label>ပမာဏ</label>
-      <input type="number" id="expAmount" placeholder="ငွေပမာဏ">
-      <label>ရက်စွဲ</label>
-      <input type="date" id="expDate">
-      <button class="btn-primary" onclick="addExpense()">➕ ထည့်မည်</button>
-    </div>
-    <div class="card">
-      <h3>အသုံးစရိတ်စာရင်း</h3>
-      <div id="expenseList"></div>
-      <div class="summary-box">
-        <div>စုစုပေါင်းသုံးငွေ<div class="val red" id="totalExpense">0</div></div>
-      </div>
-    </div>
-  </div>
+  <div id="printArea"></div>
 
-  <div class="tab-content" id="tab-report" style="display:none">
-    <div class="card">
-      <h3>အနှစ်ချုပ် / လက်ကျန်ငွေ</h3>
-      <div id="reportBody"></div>
-      <div class="actions no-print">
-        <button class="btn-outline" onclick="window.print()">🖨️ Print</button>
-        <button class="btn-outline" onclick="exportJPG()">🖼️ JPG Export</button>
-      </div>
-    </div>
-  </div>
-</div>
+  <script>
+    const DB_KEY = "club_dues_data_v1";
+    const API_KEY = "club_dues_api_url";
+    let db = loadDB();
 
-<div id="printArea"></div>
+    function loadDB() {
+      let d = localStorage.getItem(DB_KEY);
+      return d ? JSON.parse(d) : { members: [], dues: {}, expenses: [] };
+    }
 
-<script>
-const DB_KEY = "club_dues_data_v1";
-const API_KEY = "club_dues_api_url";
+    function saveDB(data) {
+      localStorage.setItem(DB_KEY, JSON.stringify(data));
+    }
 
-function loadDB(){
-  let d = localStorage.getItem(DB_KEY);
-  return d ? JSON.parse(d) : { members: [], dues: {}, expenses: [] };
-}
-function saveDB(db){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
-let db = loadDB();
+    function getApiUrl() {
+      return localStorage.getItem(API_KEY) || '';
+    }
 
-function getApiUrl(){ return localStorage.getItem(API_KEY) || ''; }
-function saveApiUrl(){
-  const url = document.getElementById('apiUrl').value.trim();
-  localStorage.setItem(API_KEY, url);
-  setStatus('URL သိမ်းပြီးပါပြီ', 'ok');
-}
+    function saveApiUrl() {
+      const url = document.getElementById('apiUrl').value.trim();
+      localStorage.setItem(API_KEY, url);
+      setStatus('URL သိမ်းပြီးပါပြီ', 'ok');
+    }
 
-function setStatus(msg, type){
-  const el = document.getElementById('syncStatus');
-  el.innerText = msg;
-  el.className = 'no-print status-' + type;
-  setTimeout(()=>{ el.innerText=''; el.className='no-print'; }, 3000);
-}
+    function setStatus(msg, type) {
+      const el = document.getElementById('syncStatus');
+      el.innerText = msg;
+      el.className = 'no-print status-' + type;
+      setTimeout(() => {
+        el.innerText = '';
+        el.className = 'no-print';
+      }, 3000);
+    }
 
-async function pullFromSheet(){
-  const url = getApiUrl();
-  if(!url) return alert('API URL ကို ထည့်ပါ');
-  setStatus('Pulling from Sheet...', 'sync');
-  try {
-    const res = await fetch(url + '?action=getAll');
-    const data = await res.json();
-    db = data;
-    saveDB(db);
-    renderMembers(); renderExpenses();
-    setStatus('✅ Pull complete', 'ok');
-  } catch(err){ setStatus('❌ Pull failed: ' + err.message, 'err'); }
-}
+    async function pullFromSheet() {
+      const url = getApiUrl();
+      if (!url) return alert('API URL ကို ထည့်ပါ');
+      setStatus('Pulling from Sheet...', 'sync');
+      try {
+        const res = await fetch(url + '?action=getAll');
+        const data = await res.json();
+        db = data;
+        saveDB(db);
+        renderMembers();
+        renderExpenses();
+        checkReminders();
+        setStatus('✅ Pull complete', 'ok');
+      } catch (err) {
+        setStatus('❌ Pull failed: ' + err.message, 'err');
+      }
+    }
 
-async function pushToSheet(){
-  const url = getApiUrl();
-  if(!url) return alert('API URL ကို ထည့်ပါ');
-  setStatus('Pushing to Sheet...', 'sync');
-  try {
-    await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action: 'syncAll', data: db })
+    async function pushToSheet() {
+      const url = getApiUrl();
+      if (!url) return alert('API URL ကို ထည့်ပါ');
+      setStatus('Pushing to Sheet...', 'sync');
+      try {
+        await fetch(url, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'syncAll', data: db })
+        });
+        setStatus('✅ Push sent', 'ok');
+      } catch (err) {
+        setStatus('❌ Push failed: ' + err.message, 'err');
+      }
+    }
+
+    document.querySelectorAll('.tab').forEach(t => {
+      t.onclick = () => {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(x => x.style.display = 'none');
+        t.classList.add('active');
+        document.getElementById('tab-' + t.dataset.tab).style.display = 'block';
+        if (t.dataset.tab === 'report') renderReport();
+        if (t.dataset.tab === 'settings') document.getElementById('apiUrl').value = getApiUrl();
+      };
     });
-    setStatus('✅ Push complete', 'ok');
-  } catch(err){ setStatus('❌ Push failed: ' + err.message, 'err'); }
-}
 
-document.querySelectorAll('.tab').forEach(t=>{
-  t.onclick = ()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(x=>x.style.display='none');
-    t.classList.add('active');
-    document.getElementById('tab-'+t.dataset.tab).style.display='block';
-    if(t.dataset.tab==='report') renderReport();
-    if(t.dataset.tab==='settings') document.getElementById('apiUrl').value = getApiUrl();
-  };
-});
+    function addMember() {
+      const name = document.getElementById('memberName').value.trim();
+      const position = document.getElementById('memberPosition').value.trim();
+      const duty = document.getElementById('memberDuty').value.trim();
+      const address = document.getElementById('memberAddress').value.trim();
+      if (!name) return alert('အမည်ထည့်ပါ');
+      db.members.push({ id: Date.now(), name, position, duty, address });
+      saveDB(db);
+      ['memberName','memberPosition','memberDuty','memberAddress'].forEach(id => document.getElementById(id).value = '');
+      renderMembers();
+      pushToSheet();
+    }
 
-function addMember(){
-  const name = document.getElementById('memberName').value.trim();
-  if(!name) return alert('အမည်ထည့်ပါ');
-  db.members.push({id: Date.now(), name});
-  saveDB(db);
-  document.getElementById('memberName').value='';
-  renderMembers();
-  pushToSheet();
-}
-function deleteMember(id){
-  if(!confirm('ဖျက်မှာသေချာလား?')) return;
-  db.members = db.members.filter(m=>m.id!==id);
-  saveDB(db); renderMembers();
-  pushToSheet();
-}
-function renderMembers(){
-  const list = document.getElementById('memberList');
-  document.getElementById('memberCount').innerText = db.members.length;
-  list.innerHTML = db.members.map(m=>
-    `<div class="row-item"><span>${m.name}</span><span class="del-x" onclick="deleteMember(${m.id})">✕</span></div>`
-  ).join('') || '<small>အဖွဲ့ဝင်မရှိသေးပါ</small>';
-}
+    function deleteMember(id) {
+      if (!confirm('ဖျက်မှာသေချာလား?')) return;
+      db.members = db.members.filter(m => m.id !== id);
+      saveDB(db);
+      renderMembers();
+      pushToSheet();
+    }
 
-function loadDuesMonth(){
-  const month = document.getElementById('duesMonth').value;
-  const amount = parseFloat(document.getElementById('duesAmount').value)||0;
-  if(!month) return alert('လရွေးပါ');
-  if(!db.dues[month]) db.dues[month] = { amount, paid: {} };
-  else db.dues[month].amount = amount || db.dues[month].amount;
-  saveDB(db);
-  renderDues(month);
-}
-function toggleDue(month, memberId){
-  const rec = db.dues[month];
-  rec.paid[memberId] = !rec.paid[memberId];
-  saveDB(db);
-  renderDues(month);
-  pushToSheet();
-}
-function renderDues(month){
-  document.getElementById('duesCard').style.display='block';
-  document.getElementById('duesTitle').innerText = month + ' လအတွက် ကြေးထည့်ခြင်း';
-  const rec = db.dues[month];
-  const listEl = document.getElementById('duesList');
-  let paidCount=0, total=0;
-  listEl.innerHTML = db.members.map(m=>{
-    const isPaid = !!rec.paid[m.id];
-    if(isPaid){ paidCount++; total += rec.amount; }
-    return `<div class="row-item"><span>${m.name}</span>
-      <span class="${isPaid?'paid':'unpaid'}" style="cursor:pointer" onclick="toggleDue('${month}',${m.id})">
-      ${isPaid ? '✅ ပေးပြီး' : '❌ မပေးသေး'}</span></div>`;
-  }).join('') || '<small>အဖွဲ့ဝင်မရှိသေးပါ</small>';
-  document.getElementById('paidCount').innerText = paidCount;
-  document.getElementById('unpaidCount').innerText = db.members.length - paidCount;
-  document.getElementById('collectedTotal').innerText = total.toLocaleString();
-}
+    function renderMembers() {
+      const list = document.getElementById('memberList');
+      document.getElementById('memberCount').innerText = db.members.length;
+      list.innerHTML = db.members.map(m => `
+        <div class="member-card">
+          <div style="display:flex;justify-content:space-between;">
+            <span class="name">${m.name}</span>
+            <span class="del-x" onclick="deleteMember(${m.id})">✕</span>
+          </div>
+          <div class="detail">${m.position ? '🎖️ ' + m.position : ''} ${m.duty ? ' | 📋 ' + m.duty : ''}</div>
+          <div class="detail">${m.address ? '📍 ' + m.address : ''}</div>
+        </div>
+      `).join('') || '<small>အဖွဲ့ဝင်မရှိသေးပါ</small>';
+    }
 
-function addExpense(){
-  const title = document.getElementById('expTitle').value.trim();
-  const amount = parseFloat(document.getElementById('expAmount').value);
-  const date = document.getElementById('expDate').value || new Date().toISOString().slice(0,10);
-  if(!title || !amount) return alert('ခေါင်းစဉ်နှင့်ပမာဏ ထည့်ပါ');
-  db.expenses.push({id: Date.now(), title, amount, date});
-  saveDB(db);
-  document.getElementById('expTitle').value='';
-  document.getElementById('expAmount').value='';
-  renderExpenses();
-  pushToSheet();
-}
-function deleteExpense(id){
-  db.expenses = db.expenses.filter(e=>e.id!==id);
-  saveDB(db); renderExpenses();
-  pushToSheet();
-}
-function renderExpenses(){
-  const listEl = document.getElementById('expenseList');
-  let total=0;
-  listEl.innerHTML = db.expenses.map(e=>{
-    total += e.amount;
-    return `<div class="row-item"><span>${e.date} - ${e.title}</span>
-      <span>${e.amount.toLocaleString()} <span class="del-x" onclick="deleteExpense(${e.id})">✕</span></span></div>`;
-  }).join('') || '<small>အသုံးစရိတ်မရှိသေးပါ</small>';
-  document.getElementById('totalExpense').innerText = total.toLocaleString();
-}
+    function loadDuesMonth() {
+      const month = document.getElementById('duesMonth').value;
+      const amount = parseFloat(document.getElementById('duesAmount').value) || 0;
+      const dueDate = document.getElementById('duesDueDate').value;
+      if (!month) return alert('လရွေးပါ');
+      if (!db.dues[month]) db.dues[month] = { amount, dueDate, paid: {} };
+      else {
+        if (amount) db.dues[month].amount = amount;
+        if (dueDate) db.dues[month].dueDate = dueDate;
+      }
+      saveDB(db);
+      renderDues(month);
+      pushToSheet();
+    }
 
-function renderReport(){
-  let totalCollected=0;
-  let monthRows = '';
-  for(const month in db.dues){
-    const rec = db.dues[month];
-    const paidMembers = db.members.filter(m=>rec.paid[m.id]);
-    const unpaidMembers = db.members.filter(m=>!rec.paid[m.id]);
-    const monthTotal = paidMembers.length * rec.amount;
-    totalCollected += monthTotal;
-    monthRows += `<div style="margin-bottom:8px;">
-      <b>${month}</b> — ပေးသွင်း ${paidMembers.length}/${db.members.length} — ရငွေ ${monthTotal.toLocaleString()}
-      <br><small>ကျန်: ${unpaidMembers.map(m=>m.name).join(', ') || 'မရှိ'}</small>
-    </div>`;
-  }
-  let totalExpense = db.expenses.reduce((s,e)=>s+e.amount,0);
-  let expenseRows = db.expenses.map(e=>`<div>${e.date} — ${e.title}: ${e.amount.toLocaleString()}</div>`).join('');
-  const balance = totalCollected - totalExpense;
-  document.getElementById('reportBody').innerHTML = `
-    <h3 style="margin-top:0">လစဉ်ကြေးများ</h3>${monthRows || '<small>မှတ်တမ်းမရှိသေးပါ</small>'}
-    <hr>
-    <h3>အသုံးစရိတ်များ</h3>${expenseRows || '<small>မှတ်တမ်းမရှိသေးပါ</small>'}
-    <hr>
-    <div class="summary-box">
-      <div>ရငွေစုစုပေါင်း<div class="val green">${totalCollected.toLocaleString()}</div></div>
-      <div>သုံးငွေစုစုပေါင်း<div class="val red">${totalExpense.toLocaleString()}</div></div>
-      <div>လက်ကျန်<div class="val blue">${balance.toLocaleString()}</div></div>
-    </div>`;
-  document.getElementById('printArea').innerHTML =
-    `<h2 style="text-align:center">လစဉ်ကြေးမှတ်တမ်း အစီရင်ခံစာ</h2>` + document.getElementById('reportBody').innerHTML;
-}
+    function toggleDue(month, memberId) {
+      const rec = db.dues[month];
+      rec.paid[memberId] = !rec.paid[memberId];
+      saveDB(db);
+      renderDues(month);
+      pushToSheet();
+      checkReminders();
+    }
 
-function exportJPG(){
-  renderReport();
-  const el = document.getElementById('printArea');
-  el.style.display = 'block';
-  el.style.padding = '16px';
-  el.style.background = '#fff';
-  html2canvas(el, {scale:2}).then(canvas=>{
-    const link = document.createElement('a');
-    link.download = 'due_report_' + new Date().toISOString().slice(0,10) + '.jpg';
-    link.href = canvas.toDataURL('image/jpeg', 0.95);
-    link.click();
-    el.style.display = 'none';
-  });
-}
+    function renderDues(month) {
+      document.getElementById('duesCard').style.display = 'block';
+      const rec = db.dues[month];
+      document.getElementById('duesTitle').innerText = month + ' လအတွက် ကြေးထည့်ခြင်း' + (rec.dueDate ? ' (နောက်ဆုံးရက် ' + rec.dueDate + ')' : '');
+      const listEl = document.getElementById('duesList');
+      let paidCount = 0, total = 0;
+      const today = new Date().toISOString().slice(0, 10);
 
-renderMembers();
-renderExpenses();
-document.getElementById('apiUrl').value = getApiUrl();
-if(getApiUrl()) pullFromSheet();
-</script>
+      listEl.innerHTML = db.members.map(m => {
+        const isPaid = !!rec.paid[m.id];
+        if (isPaid) { paidCount++; total += rec.amount; }
+        const isOverdue = !isPaid && rec.dueDate && rec.dueDate < today;
+        return `<div class="row-item"><span>${m.name}</span>
+          <span class="${isPaid ? 'paid' : (isOverdue ? 'overdue' : 'unpaid')}" style="cursor:pointer" onclick="toggleDue('${month}',${m.id})">
+            ${isPaid ? '✅ ပေးပြီး' : (isOverdue ? '⚠️ ကျော်လွန်' : '❌ မပေးသေး')}
+          </span></div>`;
+      }).join('') || '<small>အဖွဲ့ဝင်မရှိသေးပါ</small>';
+
+      document.getElementById('paidCount').innerText = paidCount;
+      document.getElementById('unpaidCount').innerText = db.members.length - paidCount;
+      document.getElementById('collectedTotal').innerText = total.toLocaleString();
+    }
+
+    function addExpense() {
+      const title = document.getElementById('expTitle').value.trim();
+      const amount = parseFloat(document.getElementById('expAmount').value);
+      const date = document.getElementById('expDate').value || new Date().toISOString().slice(0, 10);
+      if (!title || !amount) return alert('ခေါင်းစဉ်နှင့်ပမာဏ ထည့်ပါ');
+      db.expenses.push({ id: Date.now(), title, amount, date });
+      saveDB(db);
+      document.getElementById('expTitle').value = '';
+      document.getElementById('expAmount').value = '';
+      renderExpenses();
+      pushToSheet();
+    }
+
+    function deleteExpense(id) {
+      db.expenses = db.expenses.filter(e => e.id !== id);
+      saveDB(db);
+      renderExpenses();
+      pushToSheet();
+    }
+
+    function renderExpenses() {
+      const listEl = document.getElementById('expenseList');
+      let total = 0;
+      listEl.innerHTML = db.expenses.map(e => {
+        total += e.amount;
+        return `<div class="row-item"><span>${e.date} - ${e.title}</span>
+          <span>${e.amount.toLocaleString()} <span class="del-x" onclick="deleteExpense(${e.id})">✕</span></span></div>`;
+      }).join('') || '<small>အသုံးစရိတ်မရှိသေးပါ</small>';
+      document.getElementById('totalExpense').innerText = total.toLocaleString();
+    }
+
+    function renderReport() {
+      let totalCollected = 0;
+      let monthRows = '';
+      for (const month in db.dues) {
+        const rec = db.dues[month];
+        const paidMembers = db.members.filter(m => rec.paid[m.id]);
+        const unpaidMembers = db.members.filter(m => !rec.paid[m.id]);
+        const monthTotal = paidMembers.length * rec.amount;
+        totalCollected += monthTotal;
+        monthRows += `<div style="margin-bottom:8px;">
+          <b>${month}</b>${rec.dueDate ? ' (နောက်ဆုံးရက် ' + rec.dueDate + ')' : ''} — ပေးသွင်း ${paidMembers.length}/${db.members.length} — ရငွေ ${monthTotal.toLocaleString()}
+          <br><small>ကျန်: ${unpaidMembers.map(m => m.name).join(', ') || 'မရှိ'}</small>
+        </div>`;
+      }
+
+      let totalExpense = db.expenses.reduce((s, e) => s + e.amount, 0);
+      let expenseRows = db.expenses.map(e => `<div>${e.date} — ${e.title}: ${e.amount.toLocaleString()}</div>`).join('');
+      const balance = totalCollected - totalExpense;
+
+      document.getElementById('reportBody').innerHTML = `
+        <h3 style="margin-top:0">လစဉ်ကြေးများ</h3>${monthRows || '<small>မှတ်တမ်းမရှိသေးပါ</small>'}
+        <hr>
+        <h3>အသုံးစရိတ်များ</h3>${expenseRows || '<small>မှတ်တမ်းမရှိသေးပါ</small>'}
+        <hr>
+        <div class="summary-box">
+          <div>ရငွေစုစုပေါင်း<div class="val green">${totalCollected.toLocaleString()}</div></div>
+          <div>သုံးငွေစုစုပေါင်း<div class="val red">${totalExpense.toLocaleString()}</div></div>
+          <div>လက်ကျန်<div class="val blue">${balance.toLocaleString()}</div></div>
+        </div>
+      `;
+
+      document.getElementById('printArea').innerHTML =
+        `<h2 style="text-align:center">လစဉ်ကြေးမှတ်တမ်း အစီရင်ခံစာ</h2>` + document.getElementById('reportBody').innerHTML;
+    }
+
+    function exportJPG() {
+      renderReport();
+      const el = document.getElementById('printArea');
+      el.style.display = 'block';
+      el.style.padding = '16px';
+      el.style.background = '#fff';
+
+      html2canvas(el, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'due_report_' + new Date().toISOString().slice(0, 10) + '.jpg';
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+        el.style.display = 'none';
+      });
+    }
+
+    function checkReminders() {
+      const today = new Date().toISOString().slice(0, 10);
+      const in3days = new Date();
+      in3days.setDate(in3days.getDate() + 3);
+      const in3str = in3days.toISOString().slice(0, 10);
+      let alerts = [];
+
+      for (const month in db.dues) {
+        const rec = db.dues[month];
+        if (!rec.dueDate) continue;
+        const unpaidMembers = db.members.filter(m => !rec.paid[m.id]);
+        if (unpaidMembers.length === 0) continue;
+
+        if (rec.dueDate < today) {
+          alerts.push(`⚠️ <b>${month}</b> - နောက်ဆုံးရက် (${rec.dueDate}) ကျော်လွန်ပြီ! ကျန်ရှိသူ: ${unpaidMembers.map(m => m.name).join(', ')}`);
+        } else if (rec.dueDate <= in3str) {
+          alerts.push(`🔔 <b>${month}</b> - နောက်ဆုံးရက် ${rec.dueDate} နီးကပ်နေပါပြီ။ ကျန်ရှိသူ: ${unpaidMembers.map(m => m.name).join(', ')}`);
+        }
+      }
+
+      const area = document.getElementById('reminderArea');
+      area.innerHTML = alerts.map(a => `<div class="reminder-banner">${a}</div>`).join('');
+
+      if (alerts.length && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification('လစဉ်ကြေး Reminder', { body: alerts.length + ' လအတွက် ကြေးမပေးသေးသူများ ရှိပါသည်' });
+      }
+    }
+
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    renderMembers();
+    renderExpenses();
+    checkReminders();
+    document.getElementById('apiUrl').value = getApiUrl();
+    if (getApiUrl()) pullFromSheet();
+  </script>
 </body>
 </html>
